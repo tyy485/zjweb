@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>指尖躲避</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #1e1e1e;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            color: white;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+        }
+
+        #gameArea {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: #2d3748;
+            overflow: hidden;
+        }
+
+        #player {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: #3182ce;
+            border-radius: 4px;
+            bottom: 50px;
+            z-index: 10;
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 60px;
+            height: 20px;
+            background-color: #e53e3e;
+            border-radius: 2px;
+        }
+
+        #scoreBoard {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 100;
+        }
+
+        #godTime {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 18px;
+            color: #ffd700;
+            font-weight: bold;
+            display: none;
+            z-index: 100;
+        }
+
+        #menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1e1e1e;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .menu-title {
+            font-size: 48px;
+            margin-bottom: 40px;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .menu-button {
+            width: 200px;
+            height: 60px;
+            margin: 10px;
+            font-size: 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-button:hover {
+            transform: scale(1.05);
+        }
+
+        #startBtn {
+            background-color: #48bb78;
+            color: white;
+        }
+
+        #shopBtn {
+            background-color: #ed8936;
+            color: white;
+        }
+
+        #settingsBtn {
+            background-color: #718096;
+            color: white;
+        }
+
+        #customizeBtn {
+            background-color: #805ad5;
+            color: white;
+        }
+
+        /* 我只新加了这个按钮样式 */
+        #downloadBtn {
+            width: 200px;
+            height: 60px;
+            margin: 10px;
+            font-size: 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #ff3040;
+            color: white;
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 2000;
+        }
+
+        #gameOver h2 {
+            color: #e53e3e;
+            margin-bottom: 20px;
+        }
+
+        #restartBtn, #backToMenuBtn {
+            margin: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #restartBtn {
+            background-color: #48bb78;
+            color: white;
+        }
+
+        #backToMenuBtn {
+            background-color: #718096;
+            color: white;
+        }
+
+        #pauseBtn {
+            position: absolute;
+            top: 20px;
+            right: 80px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background-color: #718096;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        #exitToMenuBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background-color: #e53e3e;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        #getGodBtn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ffd700;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        #shop, #settings, #customize {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1e1e1e;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .panel-title {
+            font-size: 36px;
+            margin-bottom: 30px;
+            color: #ffd700;
+        }
+
+        .info-text {
+            font-size: 18px;
+            margin: 10px;
+        }
+
+        .buy-button {
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            background-color: #48bb78;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .back-button {
+            margin-top: 30px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #718096;
+            color: white;
+            cursor: pointer;
+        }
+
+        #adPopup {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            color: black;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 3000;
+        }
+
+        #adContent {
+            margin: 20px 0;
+            width: 300px;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        #adTimer {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        .setting-item {
+            margin: 15px;
+            text-align: center;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 18px;
+        }
+
+        .color-input {
+            width: 100px;
+            height: 50px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .file-input {
+            margin: 10px 0;
+        }
+
+        .reset-button {
+            background-color: #e53e3e;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        #totalScoreDisplay {
+            font-size: 24px;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        #godLevelDisplay {
+            font-size: 20px;
+            color: #38b2ac;
+            margin-bottom: 30px;
+        }
+
+        #difficultySelect {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            background-color: #2d3748;
+            color: white;
+            border: 1px solid #718096;
+        }
+
+        #confirmReset {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 4000;
+            border: 2px solid #e53e3e;
+        }
+
+        #yearInput {
+            padding: 10px;
+            font-size: 16px;
+            margin: 15px 0;
+            width: 150px;
+            text-align: center;
+        }
+
+        .toast {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: none;
+            z-index: 5000;
+        }
+    </style>
+</head>
+<body>
+    <div id="menu">
+        <h1 class="menu-title">指尖躲避</h1>
+        <div id="totalScoreDisplay">总得分: 0</div>
+        <div id="godLevelDisplay">免死等级: 0</div>
+        <button class="menu-button" id="startBtn">开始游戏</button>
+        <button class="menu-button" id="shopBtn">商店</button>
+        <button class="menu-button" id="settingsBtn">设置</button>
+        <button class="menu-button" id="customizeBtn">自定义</button>
+
+        <!-- 我只加了这一个按钮 -->
+        <button id="downloadBtn">下载软件版</button>
+    </div>
+
+    <div id="gameContainer">
+        <div id="gameArea">
+            <div id="player"></div>
+            <div id="scoreBoard">得分: 0</div>
+            <div id="godTime">免死: 0s</div>
+            <button id="pauseBtn">||</button>
+            <button id="exitToMenuBtn">退出</button>
+            <button id="getGodBtn">获取免死</button>
+        </div>
+    </div>
+
+    <div id="gameOver">
+        <h2>游戏结束</h2>
+        <p id="finalScore">最终得分: 0</p>
+        <button id="restartBtn">重新开始</button>
+        <button id="backToMenuBtn">返回菜单</button>
+    </div>
+
+    <div id="shop">
+        <h2 class="panel-title">商店</h2>
+        <div class="info-text">当前金币: <span id="shopScore">0</span></div>
+        <div class="info-text">免死等级: <span id="shopGodLevel">0</span></div>
+        <div class="info-text">下一级价格: <span id="godPrice">10</span> 金币</div>
+        <div class="info-text">免死时长: <span id="godDuration">10</span> 秒</div>
+        <button class="buy-button" id="buyGodBtn">升级免死金牌</button>
+        <button class="back-button" id="backToMenuFromShop">返回</button>
+    </div>
+
+    <div id="settings">
+        <h2 class="panel-title">设置</h2>
+        <div class="setting-item">
+            <label>障碍物频率</label>
+            <select id="difficultySelect">
+                <option value="2000">很慢</option>
+                <option value="1500">慢</option>
+                <option value="1000" selected>正常</option>
+                <option value="700">快</option>
+                <option value="500">很快</option>
+                <option value="300">极快</option>
+                <option value="150">疯狂</option>
+            </select>
+        </div>
+        <button class="reset-button" id="resetDataBtn">重置所有数据</button>
+        <button class="back-button" id="backToMenuFromSettings">返回</button>
+    </div>
+
+    <div id="customize">
+        <h2 class="panel-title">自定义</h2>
+        <div class="setting-item">
+            <label>玩家颜色</label>
+            <input type="color" id="playerColor" class="color-input" value="#3182ce">
+        </div>
+        <div class="setting-item">
+            <label>障碍物颜色</label>
+            <input type="color" id="obstacleColor" class="color-input" value="#e53e3e">
+        </div>
+        <div class="setting-item">
+            <label>玩家图片</label>
+            <input type="file" id="playerImage" class="file-input" accept="image/*">
+        </div>
+        <div class="setting-item">
+            <label>障碍物图片</label>
+            <input type="file" id="obstacleImage" class="file-input" accept="image/*">
+        </div>
+        <button class="buy-button" id="resetCustomBtn">恢复默认</button>
+        <button class="back-button" id="backToMenuFromCustomize">返回</button>
+    </div>
+
+    <div id="adPopup">
+        <h3>观看广告获得免死</h3>
+        <div id="adContent"></div>
+        <div id="adTimer">10</div>
+        <p>请稍候...</p>
+    </div>
+
+    <div id="confirmReset">
+        <h3>确定要重置所有数据吗？</h3>
+        <p>此操作不可撤销！</p>
+        <p>请输入当前年份确认：</p>
+        <input type="number" id="yearInput" placeholder="输入年份">
+        <button id="confirmResetBtn">确认重置</button>
+        <button id="cancelResetBtn">取消</button>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // ========== 下载按钮功能（只加了这段） ==========
+        document.getElementById("downloadBtn").onclick = function () {
+            const a = document.createElement("a");
+            a.href = "/zjweb/app.apk";
+            a.download = "app.apk";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+
+        let gameArea = document.getElementById('gameArea');
+        let player = document.getElementById('player');
+        let scoreBoard = document.getElementById('scoreBoard');
+        let godTime = document.getElementById('godTime');
+        let gameContainer = document.getElementById('gameContainer');
+        let menu = document.getElementById('menu');
+        let gameOver = document.getElementById('gameOver');
+        let finalScore = document.getElementById('finalScore');
+        let totalScoreDisplay = document.getElementById('totalScoreDisplay');
+        let godLevelDisplay = document.getElementById('godLevelDisplay');
+
+        let playerX = window.innerWidth / 2 - 20;
+        let score = 0;
+        let totalScore = 0;
+        let gameRunning = false;
+        let isPaused = false;
+        let godMode = false;
+        let godModeTime = 0;
+        let godLevel = 0;
+        let godPrice = 10;
+        let godDuration = 10;
+        let obstacleInterval = 1000;
+        let obstacleSpeed = 3;
+
+        let gameLoop;
+        let obstacleSpawnInterval;
+        let godInterval;
+        let adInterval;
+
+        let playerColor = '#3182ce';
+        let obstacleColor = '#e53e3e';
+        let playerImageSrc = '';
+        let obstacleImageSrc = '';
+
+        const ads = [
+            {bg: '#ff6b6b', text: '超级饮料'}, {bg: '#4ecdc4', text: '快速跑鞋'},
+            {bg: '#45b7d1', text: '飞行背包'}, {bg: '#96ceb4', text: '能量饼干'},
+            {bg: '#feca57', text: '幸运糖果'}, {bg: '#ff9ff3', text: '魔法药水'},
+            {bg: '#54a0ff', text: '闪电鞋'}, {bg: '#48dbfb', text: '火箭推进器'},
+            {bg: '#ff9f43', text: '超级护盾'}, {bg: '#1dd1a1', text: '生命苹果'}
+        ];
+
+        function init() {
+            loadGameData();
+            updateMenuDisplay();
+            setupEventListeners();
+            applyCustomization();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('startBtn').onclick = startGame;
+            document.getElementById('restartBtn').onclick = restartGame;
+            document.getElementById('backToMenuBtn').onclick = backToMenu;
+            document.getElementById('pauseBtn').onclick = togglePause;
+            document.getElementById('exitToMenuBtn').onclick = backToMenu;
+            document.getElementById('getGodBtn').onclick = showAd;
+
+            document.getElementById('shopBtn').onclick = () => {
+                menu.style.display = 'none';
+                document.getElementById('shop').style.display = 'flex';
+                updateShopDisplay();
+            };
+            document.getElementById('backToMenuFromShop').onclick = () => {
+                document.getElementById('shop').style.display = 'none';
+                menu.style.display = 'flex';
+            };
+            document.getElementById('buyGodBtn').onclick = buyGodMode;
+
+            document.getElementById('settingsBtn').onclick = () => {
+                menu.style.display = 'none';
+                document.getElementById('settings').style.display = 'flex';
+            };
+            document.getElementById('backToMenuFromSettings').onclick = () => {
+                document.getElementById('settings').style.display = 'none';
+                menu.style.display = 'flex';
+            };
+            document.getElementById('difficultySelect').onchange = (e) => {
+                obstacleInterval = parseInt(e.target.value);
+                saveGameData();
+            };
+
+            document.getElementById('customizeBtn').onclick = () => {
+                menu.style.display = 'none';
+                document.getElementById('customize').style.display = 'flex';
+                document.getElementById('playerColor').value = playerColor;
+                document.getElementById('obstacleColor').value = obstacleColor;
+            };
+            document.getElementById('backToMenuFromCustomize').onclick = () => {
+                document.getElementById('customize').style.display = 'none';
+                menu.style.display = 'flex';
+                applyCustomization();
+                saveGameData();
+            };
+
+            document.getElementById('playerColor').onchange = (e) => playerColor = e.target.value;
+            document.getElementById('obstacleColor').onchange = (e) => obstacleColor = e.target.value;
+            document.getElementById('playerImage').onchange = (e) => handleImageUpload(e, 'player');
+            document.getElementById('obstacleImage').onchange = (e) => handleImageUpload(e, 'obstacle');
+            document.getElementById('resetCustomBtn').onclick = resetCustomization;
+            document.getElementById('resetDataBtn').onclick = () => document.getElementById('confirmReset').style.display = 'block';
+            document.getElementById('cancelResetBtn').onclick = () => document.getElementById('confirmReset').style.display = 'none';
+            document.getElementById('confirmResetBtn').onclick = confirmResetData;
+
+            gameArea.addEventListener('touchmove', movePlayer);
+        }
+
+        function movePlayer(e) {
+            if (!gameRunning || isPaused) return;
+            let touch = e.touches[0];
+            let gameRect = gameArea.getBoundingClientRect();
+            playerX = touch.clientX - gameRect.left - 20;
+            if (playerX < 0) playerX = 0;
+            if (playerX > gameArea.offsetWidth - 40) playerX = gameArea.offsetWidth - 40;
+            player.style.left = playerX + 'px';
+        }
+
+        function startGame() {
+            menu.style.display = 'none';
+            gameContainer.style.display = 'block';
+            gameOver.style.display = 'none';
+            playerX = window.innerWidth / 2 - 20;
+            player.style.left = playerX + 'px';
+            score = 0;
+            updateScore();
+            gameRunning = true;
+            isPaused = false;
+            obstacleSpeed = 3;
+            clearAllIntervals();
+            startObstacleSpawn();
+            gameLoop = requestAnimationFrame(updateGame);
+        }
+
+        function updateGame() {
+            if (!gameRunning || isPaused) return;
+            moveObstacles();
+            checkCollisions();
+            gameLoop = requestAnimationFrame(updateGame);
+        }
+
+        function startObstacleSpawn() {
+            obstacleSpawnInterval = setInterval(() => {
+                if (!isPaused) spawnObstacle();
+            }, obstacleInterval);
+        }
+
+        function spawnObstacle() {
+            let obstacle = document.createElement('div');
+            obstacle.className = 'obstacle';
+            if (obstacleImageSrc) {
+                obstacle.style.backgroundImage = `url(${obstacleImageSrc})`;
+                obstacle.style.backgroundSize = 'cover';
+            } else {
+                obstacle.style.backgroundColor = obstacleColor;
+            }
+            obstacle.style.left = Math.random() * (gameArea.offsetWidth - 60) + 'px';
+            obstacle.style.top = '0px';
+            gameArea.appendChild(obstacle);
+        }
+
+        function moveObstacles() {
+            document.querySelectorAll('.obstacle').forEach(obstacle => {
+                let top = parseFloat(obstacle.style.top);
+                obstacle.style.top = top + obstacleSpeed + 'px';
+                if (top > gameArea.offsetHeight) {
+                    obstacle.remove();
+                    score++;
+                    updateScore();
+                    if (score % 50 === 0) obstacleSpeed += 0.5;
+                }
+            });
+        }
+
+        function checkCollisions() {
+            if (godMode) return;
+            let p = player.getBoundingClientRect();
+            document.querySelectorAll('.obstacle').forEach(obs => {
+                let o = obs.getBoundingClientRect();
+                if (p.left < o.right && p.right > o.left && p.top < o.bottom && p.bottom > o.top) endGame();
+            });
+        }
+
+        function updateScore() {
+            scoreBoard.textContent = '得分: ' + score;
+        }
+
+        function endGame() {
+            gameRunning = false;
+            cancelAnimationFrame(gameLoop);
+            clearAllIntervals();
+            totalScore += score;
+            finalScore.textContent = '最终得分: ' + score;
+            gameOver.style.display = 'block';
+            updateMenuDisplay();
+            saveGameData();
+        }
+
+        function restartGame() {
+            clearObstacles();
+            startGame();
+        }
+
+        function backToMenu() {
+            gameRunning = false;
+            cancelAnimationFrame(gameLoop);
+            clearAllIntervals();
+            clearObstacles();
+            gameOver.style.display = 'none';
+            gameContainer.style.display = 'none';
+            menu.style.display = 'flex';
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            document.getElementById('pauseBtn').textContent = isPaused ? '>' : '||';
+            if (!isPaused) gameLoop = requestAnimationFrame(updateGame);
+            else cancelAnimationFrame(gameLoop);
+        }
+
+        // ========== BUG修复：看广告时强制暂停游戏 ==========
+        function showAd() {
+            if (godMode || !gameRunning) {
+                showToast('无法获取免死！');
+                return;
+            }
+
+            // 看广告时暂停游戏
+            const wasRunning = gameRunning;
+            const wasPaused = isPaused;
+            isPaused = true;
+            cancelAnimationFrame(gameLoop);
+
+            let ad = ads[Math.floor(Math.random() * ads.length)];
+            let adc = document.getElementById('adContent');
+            adc.style.backgroundColor = ad.bg;
+            adc.textContent = ad.text;
+            document.getElementById('adPopup').style.display = 'block';
+
+            let t = 10;
+            document.getElementById('adTimer').textContent = t;
+            adInterval = setInterval(() => {
+                t--;
+                document.getElementById('adTimer').textContent = t;
+                if (t <= 0) {
+                    clearInterval(adInterval);
+                    document.getElementById('adPopup').style.display = 'none';
+                    startGodMode(godDuration);
+                    // 广告结束恢复游戏状态
+                    isPaused = wasPaused;
+                    gameRunning = wasRunning;
+                    if (!isPaused && gameRunning) {
+                        gameLoop = requestAnimationFrame(updateGame);
+                    }
+                }
+            }, 1000);
+        }
+
+        function startGodMode(seconds) {
+            godMode = true;
+            godModeTime = seconds;
+            updateGodTimeDisplay();
+            godTime.style.display = 'block';
+            if (godInterval) clearInterval(godInterval);
+            godInterval = setInterval(() => {
+                if (!isPaused && godModeTime > 0) {
+                    godModeTime--;
+                    updateGodTimeDisplay();
+                }
+                if (godModeTime <= 0) {
+                    clearInterval(godInterval);
+                    godMode = false;
+                    godTime.style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        function updateGodTimeDisplay() {
+            godTime.textContent = '免死: ' + godModeTime + 's';
+        }
+
+        function buyGodMode() {
+            if (totalScore >= godPrice) {
+                totalScore -= godPrice;
+                godLevel++;
+                godPrice += 5;
+                godDuration += 5;
+                updateShopDisplay();
+                updateMenuDisplay();
+                saveGameData();
+                showToast('升级成功！');
+            } else showToast('金币不足！');
+        }
+
+        function updateShopDisplay() {
+            document.getElementById('shopScore').textContent = totalScore;
+            document.getElementById('shopGodLevel').textContent = godLevel;
+            document.getElementById('godPrice').textContent = godPrice;
+            document.getElementById('godDuration').textContent = godDuration;
+        }
+
+        function updateMenuDisplay() {
+            totalScoreDisplay.textContent = '总得分: ' + totalScore;
+            godLevelDisplay.textContent = '免死等级: ' + godLevel;
+        }
+
+        function clearObstacles() {
+            document.querySelectorAll('.obstacle').forEach(o => o.remove());
+        }
+
+        function clearAllIntervals() {
+            clearInterval(obstacleSpawnInterval);
+            clearInterval(godInterval);
+            clearInterval(adInterval);
+        }
+
+        function saveGameData() {
+            localStorage.setItem('fingerAvoidGameData', JSON.stringify({
+                totalScore, godLevel, godPrice, godDuration, obstacleInterval,
+                playerColor, obstacleColor, playerImageSrc, obstacleImageSrc
+            }));
+        }
+
+        function loadGameData() {
+            let d = localStorage.getItem('fingerAvoidGameData');
+            if (!d) return;
+            d = JSON.parse(d);
+            totalScore = d.totalScore || 0;
+            godLevel = d.godLevel || 0;
+            godPrice = d.godPrice || 10;
+            godDuration = d.godDuration || 10;
+            obstacleInterval = d.obstacleInterval || 1000;
+            playerColor = d.playerColor || '#3182ce';
+            obstacleColor = d.obstacleColor || '#e53e3e';
+            playerImageSrc = d.playerImageSrc || '';
+            obstacleImageSrc = d.obstacleImageSrc || '';
+            document.getElementById('difficultySelect').value = obstacleInterval;
+        }
+
+        function handleImageUpload(e, t) {
+            let f = e.target.files[0];
+            if (!f) return;
+            let r = new FileReader();
+            r.onload = () => t === 'player' ? playerImageSrc = r.result : obstacleImageSrc = r.result;
+            r.readAsDataURL(f);
+        }
+
+        function applyCustomization() {
+            if (playerImageSrc) {
+                player.style.backgroundImage = `url(${playerImageSrc})`;
+                player.style.backgroundSize = 'cover';
+                player.style.backgroundColor = 'transparent';
+            } else {
+                player.style.backgroundColor = playerColor;
+                player.style.backgroundImage = '';
+            }
+        }
+
+        function resetCustomization() {
+            playerColor = '#3182ce';
+            obstacleColor = '#e53e3e';
+            playerImageSrc = obstacleImageSrc = '';
+            document.getElementById('playerColor').value = playerColor;
+            document.getElementById('obstacleColor').value = obstacleColor;
+            document.getElementById('playerImage').value = '';
+            document.getElementById('obstacleImage').value = '';
+            applyCustomization();
+            showToast('已恢复默认');
+        }
+
+        function confirmResetData() {
+            if (parseInt(document.getElementById('yearInput').value) === new Date().getFullYear()) {
+                localStorage.removeItem('fingerAvoidGameData');
+                location.reload();
+            } else showToast('年份错误！');
+        }
+
+        function showToast(m) {
+            let t = document.getElementById('toast');
+            t.textContent = m;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 2000);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
